@@ -1,0 +1,18 @@
+/* кнопка и спрятанная панель; на телефоне (≤760) список — отдельный вид, там ничего не прячем */
+.hs-btn { flex: none; display: grid; place-items: center; width: var(--ctl-h, 32px); height: var(--ctl-h, 32px); padding: 0; border: 0;
+  border-radius: var(--radius); background: transparent; color: var(--muted-foreground); cursor: pointer;
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out); }
+.hs-btn:hover { color: var(--foreground); background: var(--accent); }
+.hs-head { background: var(--row-plate); box-shadow: var(--row-plate-shadow); }   /* в шапке панели — плашка, как у ☰ */
+.hs-head:hover { background: light-dark(var(--accent), var(--muted-2)); }
+.hs-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.hs-edge { display: none; }
+@media (min-width: 761px) {
+  html.hs-hidden .app > aside, html.hs-hidden .grip.left { display: none; }
+  html.hs-hidden .app { grid-template-columns: minmax(0, 1fr); padding-left: var(--gap); }
+  html.hs-hidden .app.with-side { grid-template-columns: minmax(0, 1fr) var(--right-w); }
+  html.hs-hidden .hs-edge { display: grid; position: fixed; z-index: var(--z-panel); width: 32px; height: 32px;
+    left: calc(var(--gap, 8px) + 12px); top: calc(var(--gap, 8px) + 10px); }
+  html.hs-hidden main > .head { padding-left: 56px; }
+}
+@media (max-width: 760px) { .hs-btn { display: none; } }
