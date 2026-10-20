@@ -15,4 +15,14 @@
     left: calc(var(--gap, 8px) + 12px); top: calc(var(--gap, 8px) + 10px); }
   html.hs-hidden main > .head { padding-left: 56px; }
 }
+/* шапка сайдбара в два ряда (владелец 20.10): сверху — кнопка, аватар плагинов sidebar.header, ☰ у правого края; ниже — поиск
+   на всю ширину. Ряд ломает пустой ::after на всю ширину; сам маскот и другие плагины места не трогаем — двигаем раскладку */
+@media (min-width: 761px) {
+  .app > aside .search-row { flex-wrap: wrap; row-gap: 0; }
+  .app > aside .search-row::after { content: ""; order: 5; flex: 0 0 100%; height: 0; margin-top: var(--space-2); }
+  .app > aside .search-row #slot-sidebar-header { order: 0; }
+  .app > aside .search-row .navmenu { order: 1; margin-left: auto; }
+  .app > aside .search-row .search { order: 10; flex: 1 1 0; min-width: 0; }
+  .app > aside .search-row .wpill { order: 11; }
+}
 @media (max-width: 760px) { .hs-btn { display: none; } }

@@ -40,6 +40,11 @@ class Page(unittest.TestCase):
         self.assertRegex(css, r"@media \(min-width: 761px\)\s*\{[^@]*html\.hs-hidden \.app > aside")
         self.assertNotRegex(re.sub(r"@media \(min-width: 761px\)\s*\{.*?\n\}", "", css, flags=re.S), r"hs-hidden")
 
+    def test_head_is_two_rows_on_wide_screens(self):
+        css = read("style.css")
+        wide = re.search(r"@media \(min-width: 761px\)\s*\{[^@]*\.search-row \{ flex-wrap: wrap[^@]*\.search \{[^}]*flex: 1 1 0", css)
+        self.assertTrue(wide, "поиск должен уходить во второй ряд на всю ширину")
+
     @unittest.skipUnless(shutil.which("node"), "нет node")
     def test_state_rules(self):
         r = subprocess.run(["node", "--test", os.path.join(ROOT, "tests", "state.test.mjs")], capture_output=True, text=True)
