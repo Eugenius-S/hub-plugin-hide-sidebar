@@ -60,7 +60,18 @@ export default function register(hub) {
     order: -1,
     render(root) { if (!root.firstChild) root.append(button("hs-head")); },
   });
-  state.onChange(apply);
+  // выезд и заезд (владелец 20.10, /motion): раскладку страницы по кадрам не считаем — View Transitions: браузер снимает старый
+  // и новый вид, панель уезжает transform + opacity, окно сессии занимает место, как смонтированный слой (style.css, hs-vt).
+  // Нет API или первая секунда после загрузки (вид hub-design шлёт «спрятать» на входе) — без анимации; «меньше движения» —
+  // только перекрытие прозрачности.
+  const loadedAt = performance.now();
+  const root = document.documentElement;
+  state.onChange(() => {
+    if (!document.startViewTransition || performance.now() - loadedAt < 1000) return apply();
+    root.classList.add("hs-vt");
+    const t = document.startViewTransition(apply);
+    t.finished.finally(() => root.classList.remove("hs-vt"));
+  });
   addEventListener("hub-sidebar", (e) => state.request(e.detail));
   apply();
 }

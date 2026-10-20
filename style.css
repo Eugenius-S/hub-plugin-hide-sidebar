@@ -12,7 +12,7 @@
   html.hs-hidden .app { grid-template-columns: minmax(0, 1fr); padding-left: var(--gap); }
   html.hs-hidden .app.with-side { grid-template-columns: minmax(0, 1fr) var(--right-w); }
   html.hs-hidden .hs-edge { display: grid; position: fixed; z-index: var(--z-panel); width: 32px; height: 32px;
-    left: calc(var(--gap, 8px) + 12px); top: calc(var(--gap, 8px) + 10px); }
+    left: var(--space-3, 12px); top: calc(var(--gap, 8px) + 10px); }
   html.hs-hidden main > .head { padding-left: 56px; }
 }
 /* шапка сайдбара в два ряда (владелец 20.10): сверху — кнопка, аватар плагинов sidebar.header, ☰ у правого края; ниже — поиск
@@ -24,5 +24,32 @@
   .app > aside .search-row .navmenu { order: 1; margin-left: auto; }
   .app > aside .search-row .search { order: 10; flex: 1 1 0; min-width: 0; }
   .app > aside .search-row .wpill { order: 11; }
+}
+/* выезд и заезд: тянем только снимки (transform, opacity); ease-drawer и длительность drawer — навык motion. Окно сессии (main) — снимки
+   без растяжения: старый и новый кадр лежат у левого верха группы, группа растёт — как открывающееся окно */
+@media (min-width: 761px) {
+  html.hs-vt .app > aside { view-transition-name: hs-aside; }
+  html.hs-vt main { view-transition-name: hs-main; }
+  html.hs-vt .hs-edge { view-transition-name: hs-edge; }
+  ::view-transition-group(hs-aside) { animation: none; }
+  ::view-transition-old(hs-aside) { animation: hs-out 260ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+  ::view-transition-new(hs-aside) { animation: hs-in 260ms cubic-bezier(0.32, 0.72, 0, 1) both; }
+  ::view-transition-group(hs-main) { animation-duration: 260ms; animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1); }
+  ::view-transition-old(hs-main), ::view-transition-new(hs-main) { width: auto; height: 100%; object-fit: none; object-position: left top; mix-blend-mode: normal; }
+  ::view-transition-old(hs-main) { z-index: 1; animation: hs-fade-out 140ms ease-out both; }   /* новый кадр непрозрачен снизу; старый быстро гаснет сверху — двоения текста почти нет */
+  ::view-transition-new(hs-main) { animation: none; }
+  ::view-transition-group(hs-edge) { animation: none; }
+  ::view-transition-old(hs-edge) { animation: hs-fade-out 120ms ease-out both; }
+  ::view-transition-new(hs-edge) { animation: hs-fade-in 200ms ease-out 100ms both; }
+}
+@keyframes hs-out { to { transform: translateX(-100%); opacity: 0; } }
+@keyframes hs-in { from { transform: translateX(-100%); opacity: 0; } }
+@keyframes hs-fade-out { to { opacity: 0; } }
+@keyframes hs-fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(hs-main) { animation: none; }
+  ::view-transition-old(hs-main) { animation-duration: 150ms; }
+  ::view-transition-old(hs-aside) { animation: hs-fade-out 150ms ease-out both; }
+  ::view-transition-new(hs-aside) { animation: hs-fade-in 150ms ease-out both; }
 }
 @media (max-width: 760px) { .hs-btn { display: none; } }
