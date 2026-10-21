@@ -1,5 +1,7 @@
-"""Плагин «Спрятать панель»: манифест и то, что страница находит в файлах. Стандартная библиотека; правила панели —
-в tests/state.test.mjs (node --test tests). Запуск: python3 -m unittest discover -s tests"""
+"""The "Hide sidebar" plugin: the manifest and what the page finds in the files. Standard library; the sidebar rules are
+in tests/state.test.mjs and the page strings in tests/main.test.mjs (node --test tests/*.test.mjs).
+Run: python3 -m unittest discover -s tests"""
+import glob
 import json
 import os
 import re
@@ -8,6 +10,7 @@ import subprocess
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CYRILLIC = re.compile(r"[\u0400-\u04FF]")
 
 
 def read(name):
@@ -18,14 +21,20 @@ def read(name):
 class Manifest(unittest.TestCase):
     def test_manifest_is_complete(self):
         man = json.loads(read("hub-plugin.json"))
-        self.assertEqual((man["name"], man["web"], man["hub"]), ("hide-sidebar", "main.js", "^1.5"))   # sidebar.header — 1.5
+        self.assertEqual((man["name"], man["web"], man["hub"]), ("hide-sidebar", "main.js", "^1.5"))   # sidebar.header - 1.5
         for key in ("icon", "description", "why", "version"):
             self.assertTrue(str(man.get(key) or "").strip(), key)
         for key in ("icon", "web"):
             self.assertTrue(os.path.isfile(os.path.join(ROOT, man[key])), man[key])
 
+    def test_manifest_is_english_with_a_russian_translation(self):
+        man = json.loads(read("hub-plugin.json"))
+        for key in ("description", "why"):
+            self.assertFalse(CYRILLIC.search(man[key]), key)
+            self.assertTrue(CYRILLIC.search(man["i18n"]["ru"][key]), key)
+
     def test_readme_credits_the_icon(self):
-        self.assertIn("Иконка — [3D Fluency](https://icons8.com/icons/3d-fluency) от Icons8.", read("README.md"))
+        self.assertIn("Icon — [3D Fluency](https://icons8.com/icons/3d-fluency) by Icons8.", read("README.md"))
 
 
 class Page(unittest.TestCase):
@@ -43,7 +52,7 @@ class Page(unittest.TestCase):
     def test_head_is_two_rows_on_wide_screens(self):
         css = read("style.css")
         wide = re.search(r"@media \(min-width: 761px\)\s*\{[^@]*\.search-row \{ flex-wrap: wrap[^@]*\.search \{[^}]*flex: 1 1 0", css)
-        self.assertTrue(wide, "поиск должен уходить во второй ряд на всю ширину")
+        self.assertTrue(wide, "the search must move to the second row at full width")
 
     def test_animation_moves_only_transform_and_opacity(self):
         css = read("style.css")
@@ -56,7 +65,7 @@ class Page(unittest.TestCase):
     def test_reduced_motion_is_only_a_fade(self):
         css = read("style.css")
         rm = re.search(r"@media \(prefers-reduced-motion: reduce\)\s*\{(.*?)\n\}", css, flags=re.S)
-        self.assertTrue(rm, "нет ветки prefers-reduced-motion")
+        self.assertTrue(rm, "no prefers-reduced-motion branch")
         self.assertNotIn("translateX", rm.group(1))
         self.assertIn("hs-fade", rm.group(1))
 
@@ -66,9 +75,15 @@ class Page(unittest.TestCase):
         self.assertRegex(main, r"!document\.startViewTransition\s*\|\|\s*performance\.now\(\)\s*-\s*loadedAt\s*<\s*\d+")
         self.assertIn("hs-vt", main)
 
-    @unittest.skipUnless(shutil.which("node"), "нет node")
-    def test_state_rules(self):
-        r = subprocess.run(["node", "--test", os.path.join(ROOT, "tests", "state.test.mjs")], capture_output=True, text=True)
+    def test_css_has_no_text_to_translate(self):
+        css = read("style.css")
+        self.assertFalse(CYRILLIC.search(css))
+        self.assertNotRegex(css, r"content:\s*[\"'][^\"']")
+
+    @unittest.skipUnless(shutil.which("node"), "no node")
+    def test_node_tests(self):
+        files = sorted(glob.glob(os.path.join(ROOT, "tests", "*.test.mjs")))
+        r = subprocess.run(["node", "--test", *files], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout[-1500:])
 
 

@@ -1,17 +1,17 @@
-// Состояние боковой панели: что выбрал владелец и что просят плагины. Без страницы и хаба — проверяется в node.
+// Sidebar state: what the owner chose and what plugins ask for. No page and no hub - checked in node.
 //
-// Владелец прячет и возвращает панель кнопкой; выбор (manual) хранится в браузере. Плагин на время своего вида просит
-// событием hub-sidebar {hide, by}: hide: true — спрятать, hide: false — отпустить (by — кто просит, у каждого свой).
-// Пока кто-то держит, панель спрятана; когда отпустили последнего — прежний выбор владельца. Нажал кнопку во время
-// просьбы — это его выбор: он остаётся и после того, как плагин отпустил.
+// The owner hides and restores the sidebar with the button; the choice (manual) is stored in the browser. A plugin, for the
+// time of its view, asks with the hub-sidebar event {hide, by}: hide: true - hide, hide: false - release (by - who asks,
+// each has its own). While anyone holds it, the sidebar is hidden; when the last one releases - the owner's earlier choice.
+// A button press during a request is the owner's choice: it stays after the plugin releases.
 export const KEY = "hub.hideSidebar";
 
 export function createSidebar(storage) {
   const read = () => { try { return storage.getItem(KEY) === "1"; } catch { return false; } };
-  const write = (v) => { try { storage.setItem(KEY, v ? "1" : "0"); } catch { /* нет хранилища */ } };
-  let manual = read();          // выбор владельца
-  let override = null;          // пока держит плагин (или владелец передумал при нём) — что видно сейчас
-  let touched = false;          // владелец нажал кнопку, пока плагин держал
+  const write = (v) => { try { storage.setItem(KEY, v ? "1" : "0"); } catch { /* no storage */ } };
+  let manual = read();          // the owner's choice
+  let override = null;          // while a plugin holds (or the owner changed their mind during it) - what is visible now
+  let touched = false;          // the owner pressed the button while a plugin held
   const holders = new Set();
   const listeners = [];
   const hidden = () => (override === null ? manual : override);
@@ -27,7 +27,7 @@ export function createSidebar(storage) {
       emit();
       return hidden();
     },
-    // событие hub-sidebar: detail {hide: boolean, by: string}
+    // the hub-sidebar event: detail {hide: boolean, by: string}
     request(detail) {
       const d = detail && typeof detail === "object" ? detail : {};
       if (typeof d.hide !== "boolean") return;
@@ -38,7 +38,7 @@ export function createSidebar(storage) {
         override = true;
         touched = false;
       } else {
-        if (!holders.delete(by)) return;   // не держал — отпускать нечего
+        if (!holders.delete(by)) return;   // did not hold - nothing to release
         if (!holders.size) {
           if (touched) { manual = override; write(manual); }
           override = null;

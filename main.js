@@ -1,19 +1,27 @@
-// «Спрятать панель»: кнопка со значком панели прячет и возвращает боковую панель хаба.
-// Кнопка стоит в шапке панели (место sidebar.header, перед ☰); панель спрятана — кнопка у левого края страницы, на её месте.
-// Выбор помнится в этом браузере. На узком экране (телефон) список — отдельный вид, прятать нечего: кнопки нет.
+// "Hide sidebar": a button with a panel icon hides and restores the hub sidebar.
+// The button sits in the sidebar header (slot sidebar.header, before the menu); while the sidebar is hidden it sits at the
+// left edge of the page, in the same place. The choice is remembered in this browser. On a narrow screen (phone) the list is
+// a separate view, there is nothing to hide: no button.
 //
-// Для других плагинов — событие на window: dispatchEvent(new CustomEvent("hub-sidebar", {detail: {hide: true, by: "<плагин>"}})).
-// hide: true — спрятать на время вида, hide: false — отпустить (при уходе с вида); панель вернётся такой, какой её выбрал
-// владелец. Нет этого плагина — событие ничего не делает. Правила — state.js.
+// For other plugins - an event on window: dispatchEvent(new CustomEvent("hub-sidebar", {detail: {hide: true, by: "<plugin>"}})).
+// hide: true - hide for the time of a view, hide: false - release (when leaving the view); the sidebar returns to what the
+// owner chose by hand. Without this plugin the event does nothing. The rules are in state.js.
 import { createSidebar } from "./state.js";
 
-const TEXT = {
-  ru: { hide: "Спрятать боковую панель", show: "Показать боковую панель" },
+// UI strings: English by default, Russian when the hub language is Russian (hub.lang).
+export const STR = {
   en: { hide: "Hide sidebar", show: "Show sidebar" },
+  ru: { hide: "Спрятать боковую панель", show: "Показать боковую панель" },
+};
+// the language is read at the moment of use, not at module load
+export const makeT = (hub) => (k, v) => {
+  let s = (STR[hub.lang] ?? STR.en)[k] ?? STR.en[k] ?? k;
+  for (const [name, val] of Object.entries(v ?? {})) s = s.replaceAll(`{${name}}`, String(val));
+  return s;
 };
 const NS = "http://www.w3.org/2000/svg";
 
-// панель: рамка и вертикальная линия у левого края
+// the panel: a frame and a vertical line at the left edge
 function panelIcon() {
   const s = document.createElementNS(NS, "svg");
   s.setAttribute("viewBox", "0 0 24 24");
@@ -29,8 +37,8 @@ function panelIcon() {
 
 export default function register(hub) {
   const state = createSidebar(localStorage);
-  const words = TEXT[String(hub.lang || "ru").slice(0, 2)] || TEXT.en;
-  const buttons = [];   // в шапке панели и у края страницы — одно состояние
+  const t = makeT(hub);
+  const buttons = [];   // in the sidebar header and at the page edge - one state
 
   const button = (cls) => {
     const b = document.createElement("button");
@@ -45,7 +53,7 @@ export default function register(hub) {
     const hidden = state.hidden();
     document.documentElement.classList.toggle("hs-hidden", hidden);
     for (const b of buttons) {
-      const label = hidden ? words.show : words.hide;
+      const label = t(hidden ? "show" : "hide");
       b.title = label;
       b.setAttribute("aria-label", label);
       b.setAttribute("aria-pressed", String(hidden));
@@ -60,17 +68,17 @@ export default function register(hub) {
     order: -1,
     render(root) { if (!root.firstChild) root.append(button("hs-head")); },
   });
-  // выезд и заезд: раскладку страницы по кадрам не считаем — View Transitions: браузер снимает старый
-  // и новый вид, панель уезжает transform + opacity, окно сессии занимает место, как смонтированный слой (style.css, hs-vt).
-  // Нет API или первая секунда после загрузки (вид hub-design шлёт «спрятать» на входе) — без анимации; «меньше движения» —
-  // только перекрытие прозрачности.
+  // slide out and in: we do not compute the page layout frame by frame - View Transitions: the browser snapshots the old
+  // and new view, the sidebar slides away with transform + opacity, the session window takes its place like a mounted layer
+  // (style.css, hs-vt). No API, or the first second after load (the hub-design view sends "hide" on entry) - no animation;
+  // "reduce motion" - only an opacity crossfade.
   const loadedAt = performance.now();
   const root = document.documentElement;
   state.onChange(() => {
     if (!document.startViewTransition || performance.now() - loadedAt < 1000) return apply();
     root.classList.add("hs-vt");
-    const t = document.startViewTransition(apply);
-    t.finished.finally(() => root.classList.remove("hs-vt"));
+    const vt = document.startViewTransition(apply);
+    vt.finished.finally(() => root.classList.remove("hs-vt"));
   });
   addEventListener("hub-sidebar", (e) => state.request(e.detail));
   apply();
