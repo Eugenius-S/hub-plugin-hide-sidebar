@@ -1,15 +1,15 @@
 {
   "name": "hide-sidebar",
   "icon": "icon.png",
-  "description": "A button with a panel icon hides and restores the hub sidebar, like in Claude. The button sits in the sidebar header: on top it, the avatar and the ☰ menu, below the search at full width; while the sidebar is hidden, it sits at the left edge of the page. The sidebar smoothly slides out and in (with reduce-motion it just fades). The choice is remembered in the browser. Other plugins can hide the sidebar for the time of their view with the hub-sidebar event",
-  "why": "More room for a view or a conversation when the session list is not needed",
+  "description": "A button with a panel icon hides and restores the sidebar, like in Claude. It sits in the sidebar header; while the sidebar is hidden, at the left edge of the page. The panel slides out and in smoothly, and the choice is remembered in the browser.",
+  "why": "More room for a conversation when the chat list is not needed",
   "i18n": {
     "ru": {
-      "description": "Кнопка со значком панели прячет и возвращает боковую панель хаба — как в Claude. Кнопка стоит в шапке панели: сверху она, аватар и меню ☰, ниже поиск на всю ширину; а когда панель спрятана — у левого края страницы. Панель плавно выезжает и заезжает (при reduce-motion — просто гаснет). Выбор помнится в браузере. Другие плагины могут прятать панель на время своего вида событием hub-sidebar",
-      "why": "Больше места под вид или разговор, когда список сессий не нужен"
+      "description": "Кнопка со значком панели прячет и возвращает боковую панель, как в Claude. Стоит в шапке панели, а когда панель спрятана, у левого края страницы. Панель плавно выезжает и заезжает, выбор запоминается в браузере.",
+      "why": "Больше места под разговор, когда список чатов не нужен"
     }
   },
-  "version": "1.3.1",
+  "version": "1.3.2",
   "hub": "^1.5",
   "web": "main.js"
 }
