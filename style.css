@@ -8,6 +8,7 @@
 .hs-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .hs-edge { display: none; }
 @media (min-width: 761px) {
+  html.hs-native:not(.hs-hidden) .hs-btn { display: none; }   /* the theme has its own button: ours is not shown (only the way back during a plugin's request) */
   html.hs-hidden .app > aside, html.hs-hidden .grip.left { display: none; }
   html.hs-hidden .app { grid-template-columns: minmax(0, 1fr); padding-left: var(--gap); }
   html.hs-hidden .app.with-side { grid-template-columns: minmax(0, 1fr) var(--right-w); }
@@ -17,14 +18,14 @@
 }
 /* sidebar header in two rows: on top - the button, the sidebar.header plugins avatar, the menu at the right edge; below - the
    search at full width. An empty full-width ::after breaks the row; we do not touch the mascot itself or other plugins - we
-   move the layout */
+   move the layout. Under a theme with its own button (hs-native) the theme's header stays as it is */
 @media (min-width: 761px) {
-  .app > aside .search-row { flex-wrap: wrap; row-gap: 0; }
-  .app > aside .search-row::after { content: ""; order: 5; flex: 0 0 100%; height: 0; margin-top: var(--space-3); }
-  .app > aside .search-row #slot-sidebar-header { order: 0; }
-  .app > aside .search-row .navmenu { order: 1; margin-left: auto; }
-  .app > aside .search-row .search { order: 10; flex: 1 1 0; min-width: 0; }
-  .app > aside .search-row .wpill { order: 11; }
+  html:not(.hs-native) .app > aside .search-row { flex-wrap: wrap; row-gap: 0; }
+  html:not(.hs-native) .app > aside .search-row::after { content: ""; order: 5; flex: 0 0 100%; height: 0; margin-top: var(--space-3); }
+  html:not(.hs-native) .app > aside .search-row #slot-sidebar-header { order: 0; }
+  html:not(.hs-native) .app > aside .search-row .navmenu { order: 1; margin-left: auto; }
+  html:not(.hs-native) .app > aside .search-row .search { order: 10; flex: 1 1 0; min-width: 0; }
+  html:not(.hs-native) .app > aside .search-row .wpill { order: 11; }
 }
 /* slide out and in: we animate only snapshots (transform, opacity); ease-drawer and the drawer duration - the motion skill. The
    session window (main) - snapshots without stretching: the old and new frame sit at the top left of the group, the group

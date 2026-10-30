@@ -4,6 +4,10 @@ A button with a panel icon hides and restores the hub sidebar, like in Claude. T
 
 The button label is English by default and Russian when the hub language is Russian.
 
+## Themes with their own button
+
+If a theme draws its own sidebar button, this plugin shows no button and does not apply the saved choice (the theme's button works the core's own fold). The plugin looks for it by markup, not by theme name: any button marked `data-sidebar-toggle`, or a button whose class contains `fold` in the search row (`.search-row`) or directly in `#app` (the Clean theme). It looks again after every change of the page, so a theme switch needs no reload; without such a button everything works as before. A theme author can mark the button with `data-sidebar-toggle`. A plugin's `hub-sidebar` request still hides the sidebar, and our button at the page edge is then the way back.
+
 ## For other plugins
 
 A plugin that needs more room (a canvas, an editor) hides the sidebar for the time of its view with an event on `window`:
@@ -16,6 +20,10 @@ dispatchEvent(new CustomEvent("hub-sidebar", { detail: { hide: false, by: "my-pl
 ```
 
 `by` is the plugin name. When the last one releases, the sidebar returns to what the owner chose by hand. If the owner pressed the button while the view was open, that is their choice, and it stays after leaving the view. Without this plugin the event does nothing. While the sidebar is hidden, `<html>` has the class `hs-hidden`, and a button (32×32) sits in the top left corner, so leave room for it.
+
+## Changes
+
+- 1.4.0: a theme with its own sidebar button (Clean) - one button instead of two; the plugin's header layout also stays out of such a theme's header.
 
 ## Install
 

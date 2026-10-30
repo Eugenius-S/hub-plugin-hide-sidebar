@@ -3,6 +3,12 @@
 // left edge of the page, in the same place. The choice is remembered in this browser. On a narrow screen (phone) the list is
 // a separate view, there is nothing to hide: no button.
 //
+// A theme may draw its own sidebar button (a button marked data-sidebar-toggle, or a "fold" button in the search row or at
+// the top of #app, like the Clean theme). Then this plugin shows no button and does not hide the sidebar by the saved choice:
+// the theme's button works the core's own fold. Found by markup, not by theme name; checked on every change of the page,
+// so a theme switch needs no reload. A plugin's hub-sidebar request still hides the sidebar, and the edge button is then
+// the way back.
+//
 // For other plugins - an event on window: dispatchEvent(new CustomEvent("hub-sidebar", {detail: {hide: true, by: "<plugin>"}})).
 // hide: true - hide for the time of a view, hide: false - release (when leaving the view); the sidebar returns to what the
 // owner chose by hand. Without this plugin the event does nothing. The rules are in state.js.
@@ -20,6 +26,12 @@ export const makeT = (hub) => (k, v) => {
   return s;
 };
 const NS = "http://www.w3.org/2000/svg";
+
+// the theme's own sidebar button; our buttons (.hs-btn) never match it
+export const NATIVE = '[data-sidebar-toggle], .search-row button[class*="fold"], #app > button[class*="fold"]';
+export const hasNative = (root) => !!root.querySelector(NATIVE);
+// what the page shows: with the theme's own button the owner's saved choice is not ours to apply, only a plugin's request
+export const hiddenNow = (state, native) => (native ? state.held() && state.hidden() : state.hidden());
 
 // the panel: a frame and a vertical line at the left edge
 function panelIcon() {
@@ -49,9 +61,11 @@ export default function register(hub) {
     buttons.push(b);
     return b;
   };
+  let native = false;
   const apply = () => {
-    const hidden = state.hidden();
+    const hidden = hiddenNow(state, native);
     document.documentElement.classList.toggle("hs-hidden", hidden);
+    document.documentElement.classList.toggle("hs-native", native);
     for (const b of buttons) {
       const label = t(hidden ? "show" : "hide");
       b.title = label;
@@ -80,6 +94,24 @@ export default function register(hub) {
     const vt = document.startViewTransition(apply);
     vt.finished.finally(() => root.classList.remove("hs-vt"));
   });
-  addEventListener("hub-sidebar", (e) => state.request(e.detail));
+  addEventListener("hub-sidebar", (e) => {
+    const before = state.hidden();
+    state.request(e.detail);
+    // under a theme button the page may change without the saved choice changing (it was "hidden" and is ignored): redraw
+    if (native && state.hidden() === before) apply();
+  });
+  // the theme's button comes and goes with the theme (the page redraws, the theme's script adds or removes it): look again
+  // once per frame after a change of the page, and on a theme event
+  let looking = false;
+  const look = () => {
+    looking = false;
+    const now = hasNative(document);
+    if (now !== native) { native = now; apply(); }
+  };
+  const lookSoon = () => { if (!looking) { looking = true; requestAnimationFrame(look); } };
+  new MutationObserver(lookSoon).observe(document.body, { childList: true, subtree: true });
+  addEventListener("hub-theme", lookSoon);
+  addEventListener("storage", lookSoon);
+  native = hasNative(document);
   apply();
 }

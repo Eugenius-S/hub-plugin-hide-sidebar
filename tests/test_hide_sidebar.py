@@ -44,6 +44,14 @@ class Page(unittest.TestCase):
         self.assertIn('hub.addSlot("sidebar.header"', main)
         self.assertIn('hub.addStyle("style.css")', main)
 
+    def test_theme_button_is_found_by_markup_and_watched(self):
+        main, css = read("main.js"), read("style.css")
+        self.assertIn("data-sidebar-toggle", main)
+        self.assertNotRegex(main, r"th-clean|clean-fold")   # not by a theme's name
+        self.assertIn("MutationObserver", main)
+        self.assertIn('addEventListener("hub-theme"', main)
+        self.assertRegex(css, r"html\.hs-native:not\(\.hs-hidden\) \.hs-btn \{ display: none")
+
     def test_style_hides_only_on_wide_screens(self):
         css = read("style.css")
         self.assertRegex(css, r"@media \(min-width: 761px\)\s*\{[^@]*html\.hs-hidden \.app > aside")
